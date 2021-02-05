@@ -1,0 +1,59 @@
+% Get file path
+cifarDatasetPath = fullfile('cifar-100-matlab');
+
+% Load data from Cifar
+meta = load('cifar-100-matlab/meta.mat');
+test = load('cifar-100-matlab/test.mat');
+train = load('cifar-100-matlab/train.mat');
+
+% Grab just the people superclass
+people_course_label_idx = find(meta.coarse_label_names == "people") - 1;
+coarse_test_idx = find(test.coarse_labels == people_course_label_idx);
+coarse_train_idx = find(train.coarse_labels == people_course_label_idx);
+
+% Grab baby, boy, girl, man, and woman classes
+baby_fine_label_idx = find(meta.fine_label_names == "baby") - 1;
+boy_fine_label_idx = find(meta.fine_label_names == "boy") - 1;
+girl_fine_label_idx = find(meta.fine_label_names == "girl") - 1;
+man_fine_label_idx = find(meta.fine_label_names == "man") - 1;
+woman_fine_label_idx = find(meta.fine_label_names == "woman") - 1;
+fine_test_idx = find( ...
+    test.fine_labels == baby_fine_label_idx | ...
+    test.fine_labels == boy_fine_label_idx | ...
+    test.fine_labels == girl_fine_label_idx | ...
+    test.fine_labels == man_fine_label_idx | ...
+    test.fine_labels == woman_fine_label_idx ...
+);
+fine_train_idx = find( ...
+    train.fine_labels == baby_fine_label_idx | ...
+    train.fine_labels == boy_fine_label_idx | ...
+    train.fine_labels == girl_fine_label_idx | ...
+    train.fine_labels == man_fine_label_idx | ...
+    train.fine_labels == woman_fine_label_idx ...
+);
+
+% Manipulate testing data
+test_data = test.data';
+test_data = reshape(test_data, 32,32,3,[]);
+test_data = permute(test_data, [2 1 3 4]);
+
+% Manipulate training data
+train_data = train.data';
+train_data = reshape(train_data, 32,32,3,[]);
+train_data = permute(train_data, [2 1 3 4]);
+
+% Store testing data
+for i = 1:length(coarse_test_idx)
+    imwrite(test_data(:,:,:,coarse_test_idx(i)), ...
+        "cifar-100-data/test/"+ ...
+        char(meta.fine_label_names(test.fine_labels(fine_test_idx(i))+1))+"/"+ ...
+        test.filenames(coarse_test_idx(i)));
+end
+
+% Store training data
+for i = 1:length(coarse_train_idx)
+    imwrite(train_data(:,:,:,coarse_train_idx(i)), ...
+        "cifar-100-data/train/"+ ...
+        char(meta.fine_label_names(train.fine_labels(fine_train_idx(i))+1))+"/"+ ...
+        train.filenames(coarse_train_idx(i)));
+end
